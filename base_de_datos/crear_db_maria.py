@@ -4,10 +4,10 @@ import csv
 def maria_connect():
     try:
         conn = pymysql.connect(
-            user="agnesm",
-            password="torrente",
-            host="192.168.1.11",
-            port=3307
+            user="root",
+            password="pruebas",
+            host="localhost",
+            port=3306
         )
         
         return conn
@@ -79,13 +79,13 @@ ind_pedia = """CREATE INDEX IF NOT EXISTS ind_pedia ON pediatria (paciente_id)""
 cursor.execute(ind_pedia)
 
 #Crear usuarios
-#query= """CREATE USER IF NOT EXISTS 'agnesm'@localhost IDENTIFIED BY 'toor'"""
+query= """CREATE USER IF NOT EXISTS 'agnesm'@localhost IDENTIFIED BY 'toor'"""
 
-#query2= """GRANT ALL PRIVILEGES ON *.* TO 'agnesm'@localhost IDENTIFIED BY 'toor'"""
+query2= """GRANT ALL PRIVILEGES ON *.* TO 'agnesm'@localhost IDENTIFIED BY 'toor'"""
 
-#cursor.execute(query)
+cursor.execute(query)
 
-#cursor.execute(query2)
+cursor.execute(query2)
 
 
 #agregar los datos del CSV a la base de datos

@@ -3,7 +3,7 @@ import sqlite3
 import pymysql.cursors
 
 
-'''
+
 #conectar a base de datos local
 DEFAULT_PATH = "./base_de_datos/db.sqlite3"
 
@@ -16,7 +16,7 @@ conn_local = db_connect()
 #iniciar cursor para querys
 cur = conn_local.cursor()
 
-query = """SELECT * FROM pediatria"""
+query = """SELECT * FROM ginecologia"""
 
 cur.execute(query)
 
@@ -55,3 +55,4 @@ with conn_maria.cursor() as cursor:
     for item in cursor.fetchall():
         print(f'===========\n {item}')
 
+'''

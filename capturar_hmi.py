@@ -54,28 +54,30 @@ with conn_local:
 def reporte_gine():
     """Generar reporte de consumibles ginecologia"""
 
-    query = """SELECT ginecologia.clave,ginecologia.fecha,ginecologia.hora,ginecologia.servicio,catalogoinsumos.nombre 
+    query = """SELECT ginecologia.clave,ginecologia.fecha,ginecologia.hora,ginecologia.servicio,
+    catalogoinsumos.nombre, COUNT (catalogoinsumos.nombre) cantidad
     FROM ginecologia,catalogoinsumos 
-    WHERE ginecologia.CURP=? 
-    AND ginecologia.clave = catalogoinsumos.clave AND ginecologia.servicio = ? AND ginecologia.fecha = ?"""
+    WHERE ginecologia.CURP=?
+    AND ginecologia.clave = catalogoinsumos.clave AND ginecologia.servicio = ? AND ginecologia.fecha = ?
+    GROUP BY catalogoinsumos.nombre"""
 
     curp = values['-curp-'].upper().strip()
     servicio = values['-servicio-']
-    nombre = values['-nombre-'].strip()
+    nombre = values['-nombre-'].upper().strip()
 
     with conn_local:
         consulta = conn_local.execute(query,(curp,servicio,fechahoy))
         for item in consulta:
             rreporte.append(item)
     
-    tnom = f'Nombre: {nombre} / Servicio: {servicio}'
+    tnom = f'Nombre: {nombre} \nServicio: {servicio}'
     document = Document()
     document.add_heading('Reporte de Material Consumido', 0)
     document.add_heading(tnom, 1)
 
     for item in rreporte:
-        clave, fecha, hora, servicio, nombre = item
-        f = f'-------------\nClave: {clave} | Fecha: {fecha} | Hora: {hora}\n{nombre}'
+        clave, fecha, hora, servicio, nombre, cantidad = item
+        f = f'-------------\nClave: {clave} | Fecha: {fecha} | Hora: {hora}\n{nombre}  -  Cantidad: {cantidad}'
         document.add_paragraph(f)
 
     document.save('./reportes/temporal.docx')
@@ -83,13 +85,15 @@ def reporte_gine():
 def reporte_pedia():
     """Generar reporte de consumibles pediatria"""
 
-    query = """SELECT pediatria.clave,pediatria.fecha,pediatria.hora,pediatria.servicio,catalogoinsumos.nombre 
+    query = """SELECT pediatria.clave,pediatria.fecha,pediatria.hora,pediatria.servicio,
+    catalogoinsumos.nombre, COUNT (catalogoinsumos.nombre) cantidad 
     FROM pediatria,catalogoinsumos 
     WHERE pediatria.paciente_id=?
-    AND pediatria.CUPI=? 
-    AND pediatria.clave = catalogoinsumos.clave"""
+    AND pediatria.CUPI=? AND pediatria.clave = catalogoinsumos.clave 
+    AND ginecologia.servicio = ? AND ginecologia.fecha = ?
+    GROUP BY catalogoinsumos.nombre"""
 
-    paciente_id = values['-nombre-'].lower().strip()
+    paciente_id = values['-nombre-'].upper().strip()
     servicio = values['-servicio-']
     CUPI = generar_cupi()
 
@@ -99,14 +103,14 @@ def reporte_pedia():
         for item in consulta:
             rreporte.append(item)
     
-    tnom = f'Nombre: {paciente_id} | Servicio: {servicio}'
+    tnom = f'Nombre: {paciente_id} \nServicio: {servicio}'
     document = Document()
     document.add_heading('Reporte de Material Consumido', 0)
     document.add_heading(tnom, 1)
 
     for item in rreporte:
-        clave, fecha, hora, servicio, nombre = item
-        f = f'-------------\nClave: {clave} | Fecha: {fecha} | Hora: {hora}\n{nombre}'
+        clave, fecha, hora, servicio, nombre, cantidad = item
+        f = f'-------------\nClave: {clave} | Fecha: {fecha} | Hora: {hora}\n{nombre}  -  Cantidad: {cantidad}'
         document.add_paragraph(f)
 
     document.save('./reportes/temporal.docx')
@@ -410,9 +414,7 @@ AreaRegistros = [
 layout = [
     [sg.Menu(menuprincipal, tearoff=True)],
     [sg.Frame('Identificacion del paciente', Info_Paciente)],
-    [sg.Text('')],
     [sg.Frame('Busqueda y captura de material hospitalario', AreaCaptura)],
-    [sg.Text('')],
     [sg.Frame('Consulta de movimientos', AreaRegistros)]
 ]
 
@@ -461,27 +463,22 @@ while True:  # Mantenerla persistente
                 else:
                     window['-output-'].update(output_gine)
                     output_gine = ""
-            
             else:
                     sg.popup('¿CAW?','No olvides escribir nombre y curp!\n')
 
         elif values['-servicio-'] == 'Urgencias Pediatria' or values['-servicio-'] == 'Labor / Toco (Pediatria)' or values['-servicio-'] == 'Quirofano Pediatria' or values['-servicio-'] == 'UCIN' or values['-servicio-'] == 'Cunero Patologico' or values['-servicio-'] =='Cuidados Intermedios' or values['-servicio-'] == 'Alojamiento Conjunto Pediatria':
             if values['-nombre-'] != '' and len(values['-fn-']) == 10:
-                if values['-masc-'] or values['-fem-']:
-                    busqueda_pedia()
+                busqueda_pedia()
                 
-                    if output_pedia == "":
-                        sg.popup('Baia Baia','El paciente no existe en la base de datos\n\nIntenta de nuevo\n\nTip: Verifica que el nombre, servicio, fecha de nacimiento y sexo sean correctos\n')
-                    else:
-                        window['-output-'].update(output_pedia)
-                        output_pedia = ""
+                if output_pedia == "":
+                    sg.popup('Baia Baia','El paciente no existe en la base de datos\n\nIntenta de nuevo\n\nTip: Verifica que el nombre, servicio, fecha de nacimiento y sexo sean correctos\n')
                 else:
-                    sg.popup('¿CAW?','No olvides seleccionar el sexo del paciente!\n')
+                    window['-output-'].update(output_pedia)
+                    output_pedia = ""
             else:
-                    sg.popup('¿CAW?','No olvides escribir el nombre y la fecha de nacimiento (CURP es opcional)!\n')
-
+                sg.popup('¿CAW?','No olvides escribir el nombre y la fecha de nacimiento (CURP es opcional)!\n')
         else:
-                    sg.popup('¿CAW?','No olvides seleccionar un servicio\n')       
+            sg.popup('¿CAW?','No olvides seleccionar un servicio\n')       
     
     #Imprimir Reporte
     elif event == 'Imprimir Reporte':
@@ -489,16 +486,14 @@ while True:  # Mantenerla persistente
             reporte_gine()
             rreporte = []
         
-        else:
+        elif values['-servicio-'] == 'Urgencias Pediatria' or values['-servicio-'] == 'Labor / Toco (Pediatria)' or values['-servicio-'] == 'Quirofano Pediatria' or values['-servicio-'] == 'UCIN' or values['-servicio-'] == 'Cunero Patologico' or values['-servicio-'] =='Cuidados Intermedios' or values['-servicio-'] == 'Alojamiento Conjunto Pediatria':
             if len(values['-fn-']) == 10:
-                if values['-masc-'] or values['-fem-']:
-                    reporte_pedia()
-                    rreporte = []
-
-                else:
-                    sg.popup('¿CAW?','No olvides el sexo de tu paciente! Super Importante\n')            
+                reporte_pedia()
+                rreporte = []            
             else:
                 sg.popup('¿CAW?','No olvides la fecha de nacimiento!\n')
+        else:
+            sg.popup('¿CAW?','No olvides seleccionar un servicio')
 
     #Enviar Datos
     elif event == 'Agregar Registro':
@@ -533,36 +528,30 @@ while True:  # Mantenerla persistente
        
         elif values['-servicio-'] == 'Urgencias Pediatria' or values['-servicio-'] == 'Labor / Toco (Pediatria)' or values['-servicio-'] == 'Quirofano Pediatria' or values['-servicio-'] == 'UCIN' or values['-servicio-'] == 'Cunero Patologico' or values['-servicio-'] =='Cuidados Intermedios' or values['-servicio-'] == 'Alojamiento Conjunto Pediatria':
             if values['-nombre-'] != '' and len(values['-fn-']) == 10 and values['-cantidad-'].isdigit() and int(values['-cantidad-']) < 20:
-                if values['-masc-'] or values['-fem-']:
-                    if values['-linsumo-'] != []:
-                        seleccion = values['-linsumo-']
-                        insumo = catalogo[seleccion[0]]
+                if values['-linsumo-'] != []:
+                    seleccion = values['-linsumo-']
+                    insumo = catalogo[seleccion[0]]
+                    agregar_pedia_local()
+                    agregar_pedia_maria()
+                    busqueda_pedia()
+                    window['-output-'].update(output_pedia)
+                    output_pedia = ""
+
+                elif values['-minsumo-'] != '':
+                    try:
+                        llave = values['-minsumo-']
+                        insumo = catalogo[llave]
                         agregar_pedia_local()
                         agregar_pedia_maria()
                         busqueda_pedia()
                         window['-output-'].update(output_pedia)
                         output_pedia = ""
-
-                    elif values['-minsumo-'] != '':
-                        try:
-                            llave = values['-minsumo-']
-                            insumo = catalogo[llave]
-                            agregar_pedia_local()
-                            agregar_pedia_maria()
-                            busqueda_pedia()
-                            window['-output-'].update(output_pedia)
-                            output_pedia = ""
-                        except:
-                            sg.popup('¿CAW?','Parece que el articulo esta incompleto, selecciona de nuevo dentro de la lista\n')
-                    else:
-                        sg.popup('¿CAW?','No olvides seleccionar una opcion de insumo\n')
-
+                    except:
+                        sg.popup('¿CAW?','Parece que el articulo esta incompleto, selecciona de nuevo dentro de la lista\n')
                 else:
-                    sg.popup('¿CAW?','Falta el sexo de tu paciente! Super importante!\n')
-            
+                    sg.popup('¿CAW?','No olvides seleccionar una opcion de insumo\n')
             else:
-                sg.popup('¿CAW? Recuerda...','-Necesito un nombre y una fecha de nacimiento! No puedo registrarlo asi!\n\n(El CURP es opcional)\n\n-Tampoco debes usar una letra como cantidad!\n\nNo es algebra!\n\n-No puedes registrar mas de 20 articulos a la vez!\n\nMuere la computadora!\n\n')
-       
+                sg.popup('¿CAW? Recuerda...','-Necesito un nombre y una fecha de nacimiento! No puedo registrarlo asi!\n\n(El CURP es opcional)\n\n-Tampoco debes usar una letra como cantidad!\n\nNo es algebra!\n\n-No puedes registrar mas de 20 articulos a la vez!\n\nMuere la computadora!\n\n')   
         else:
             sg.popup('¿CAW?','No haz elegido servicio! no puedo trabajar asi\n')
 

@@ -17,6 +17,21 @@ def db_connect(db_path=DEFAULT_PATH):
 
 conn_local = db_connect()
 
+def maria_connect():
+    try:
+        conn = pymysql.connect(
+            user="root",
+            password="pruebas",
+            host="localhost",
+            database="hmi",
+            port=3306
+        )
+        
+        return conn
+
+    except Exception as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+
 
 #with conn:
 #    query = """SELECT * FROM pediatria"""
@@ -63,6 +78,21 @@ with open('./base_de_datos/dump.sql', 'w') as f:
 
 conn_local.close()
 '''
+
+fecha = '2020-08-21'
+
+query="""SELECT * FROM ginecologia WHERE fecha = %s ORDER BY ID DESC"""
+
+conn_maria = maria_connect()    
+            
+with conn_maria.cursor() as cursor:
+    cursor.execute(query,(fecha,))
+
+    lista = cursor.fetchall()
+
+    for item in lista:
+        print(f'------------------\n{item}')
+
 
 
 
