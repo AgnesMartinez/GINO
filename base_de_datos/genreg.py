@@ -31,22 +31,6 @@ servicio_gine = ['Urgencias GyO','Labor / Toco (GyO)','Quirofano GyO','Alojamien
 
 servicio_pedia = ['Urgencias Pediatria','Labor / Toco (Pediatria)', 'Quirofano Pediatria','UCIN','Cunero Patologico','Cuidados Intermedios','Alojamiento Conjunto Pediatria']
 
-fecha_nacimiento = ['2020/01/05','2020/01/10','2020/01/15','2020/01/25','2020-01-30',
-                    '2020/02/05','2020/02/10','2020/02/15','2020/02/25','2020-02-28'
-                    '2020/03/05','2020/03/10','2020/03/15','2020/03/25','2020-03-30'
-                    '2020/04/05','2020/04/10','2020/04/15','2020/04/25','2020-04-30'
-                    '2020/05/05','2020/05/10','2020/05/15','2020/05/25','2020-05-30'
-                    '2020/06/05','2020/06/10','2020/06/15','2020/06/25','2020-06-30'
-                    '2020/07/05','2020/07/10','2020/07/15','2020/07/25','2020-07-30'
-                    '2020/08/05','2020/08/10','2020/08/15','2020/08/25','2020-08-30'
-                    '2020/09/05','2020/09/10','2020/09/15','2020/09/25','2020-09-30'
-                    '2020/10/05','2020/10/10','2020/10/15','2020/10/25','2020-10-30'
-                    '2020/11/05','2020/11/10','2020/11/15','2020/11/25','2020-11-30'
-                    '2020/12/05','2020/12/10','2020/12/15','2020/12/25','2020-12-30'
-                    ]
-
-sexo = ['H','M']
-
 
 #Catalogo de insumos extraido de la BD Local
 with conn_local:
@@ -66,7 +50,7 @@ def generar_gine():
         
     nom_completo = nombre.upper().split()
         
-    curp = f'{nom_completo[1][0:2]}{nom_completo[2][0:2]}{12345678}'
+    curp = f'{nom_completo[1][0:2]}{nom_completo[2][0:2]}000000XXXYYYZZ'
         
     servicio = random.choice(servicio_gine)
 
@@ -82,17 +66,17 @@ def generar_gine():
 
 def generar_pedia():
     
-    nombre = f'RN {random.choice(apellidos)} { random.choice(apellidos)}'
+    nombre = f'RN {random.choice(apellidos)} {random.choice(apellidos)}'
         
-    nom_completo = nombre.upper().split()
-        
-    curp = f'{nom_completo[1][0:2]}{nom_completo[2][0:2]}{12345678}'
-        
+    nom_completo = nombre.upper().replace('RN','').split()
+
     fena = random.choice(fecha_nacimiento)
+        
+    curp = f'{nom_completo[0][0:2]}{nom_completo[1][0:2]}{fena[2:].replace("/","")}XXXYYYZZ'
         
     sexobebe = random.choice(sexo)
 
-    CUPI = f'{nom_completo[1][0:2]}{nom_completo[2][0:2]}{fena[2:].replace("/","")}{sexobebe}'
+    CUPI = f'{nom_completo[0][0:2]}{nom_completo[1][0:2]}{fena[2:].replace("/","")}{sexobebe}'
 
     servicio = random.choice(servicio_pedia)
 

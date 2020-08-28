@@ -3,6 +3,7 @@ import sqlite3
 from datetime import date
 import concurrent.futures
 import pymysql.cursors
+import csv
 
 #conectar a base de datos local
 DEFAULT_PATH = "./base_de_datos/db.sqlite3"
@@ -23,7 +24,6 @@ def maria_connect():
             database="hmi",
             port=3307
         )
-        
         return conn
 
     except Exception as e:
@@ -44,60 +44,63 @@ with conn_local:
         mcombo.append(item[1])
 
 
-def u_300_gine_local():
-    query = """SELECT * FROM ginecologia ORDER BY ID DESC LIMIT 300"""
+def u_300_gine():
+    global output
 
-    with conn_local:
-        lista = conn_local.execute(query)
-        for item in lista:
-            global output
-            output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
-
-def u_300_gine_maria():
-    try:
+    if values['-BD-'] == 'BD Local':
         query = """SELECT * FROM ginecologia ORDER BY ID DESC LIMIT 300"""
-        conn_maria = maria_connect()
-    
-        with conn_maria.cursor() as cursor:
-        
-            cursor.execute(query)
 
-            lista = cursor.fetchall()
-        
+        with conn_local:
+            lista = conn_local.execute(query)
             for item in lista:
-                global output
                 output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
+
+    elif values['-BD-'] == 'BD Maria':
+        try:
+            query = """SELECT * FROM ginecologia ORDER BY ID DESC LIMIT 300"""
+            conn_maria = maria_connect()
     
-    except:
-        pass
+            with conn_maria.cursor() as cursor:
+        
+                cursor.execute(query)
+        
+                for item in cursor.fetchall():
+                    output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
+        except:
+            pass
+    
+    else:
+        sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
 
-def u_300_pedia_local():
-    query = """SELECT * FROM pediatria ORDER BY ID DESC LIMIT 300"""
+def u_300_pedia():
+    global output
 
-    with conn_local:
-        lista = conn_local.execute(query)
-        for item in lista:
-            global output
-            output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
-
-
-def u_300_pedia_maria():
-    try:
+    if values['-BD-'] == 'BD Local':
         query = """SELECT * FROM pediatria ORDER BY ID DESC LIMIT 300"""
-        conn_maria = maria_connect()
-        with conn_maria.cursor() as cursor:
 
-            cursor.execute(query)
-
-            lista = cursor.fetchall()
-
+        with conn_local:
+            lista = conn_local.execute(query)
             for item in lista:
-                global output
                 output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
 
-    except:
-        pass  
+    elif values['-BD-'] == 'BD Maria':
+        try:
+            query = """SELECT * FROM pediatria ORDER BY ID DESC LIMIT 300"""
+            
+            conn_maria = maria_connect()
+            
+            with conn_maria.cursor() as cursor:
+
+                cursor.execute(query)
+
+                for item in cursor.fetchall():
+                    output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
+        except:
+            pass
+    
+    else:
+        sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
 def borrar_registro_gine():
     if values['-BD-'] == 'BD Local':
@@ -119,6 +122,9 @@ def borrar_registro_gine():
 
         except:
             pass
+    
+    else:
+        sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
 
 def borrar_registro_pedia():
@@ -141,6 +147,9 @@ def borrar_registro_pedia():
 
         except:
             pass
+    
+    else:
+        sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
 def modificar_registro_gine():
     
@@ -172,6 +181,8 @@ def modificar_registro_gine():
 
                 except:
                     pass
+            else:
+                sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
         elif key == 'CURP' and value and len(values['-curp2-']) == 18:
             if values['-BD-'] == 'BD Local':
@@ -195,6 +206,9 @@ def modificar_registro_gine():
 
                 except:
                     pass
+            
+            else:
+                sg.popup('¿CAW?','Selecciona una base de datos!\n')
         
         elif key == 'servicio' and value:
             if values['-BD-'] == 'BD Local':
@@ -218,6 +232,9 @@ def modificar_registro_gine():
 
                 except:
                     pass
+
+            else:
+                sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
         elif key == 'insumo' and value:
             if values['-BD-'] == 'BD Local':
@@ -243,6 +260,9 @@ def modificar_registro_gine():
 
                 except:
                     pass
+            
+            else:
+                sg.popup('¿CAW?','Selecciona una base de datos!\n')
             
 
 def modificar_registro_pedia():
@@ -277,7 +297,9 @@ def modificar_registro_pedia():
 
                 except:
                     pass
-
+            
+            else:
+                sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
         elif key == 'CURP' and value and len(values['-curp2-']) == 12:
             if values['-BD-'] == 'BD Local':
@@ -301,6 +323,9 @@ def modificar_registro_pedia():
                 
                 except:
                     pass
+            
+            else:
+                sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
         
         elif key == 'servicio' and value:
@@ -325,6 +350,9 @@ def modificar_registro_pedia():
 
                 except:
                     pass
+            
+            else:
+                sg.popup('¿CAW?','Selecciona una base de datos!\n')
                 
 
         elif key == 'insumo' and value:
@@ -351,113 +379,112 @@ def modificar_registro_pedia():
                 
                 except:
                     pass
+            
+            else:
+                sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
 
-
-def busqueda_gine_local():
-    query = """SELECT ginecologia.ID,ginecologia.clave, ginecologia.fecha, ginecologia.hora, ginecologia.servicio, catalogoinsumos.nombre  
-    FROM ginecologia,catalogoinsumos 
-    WHERE ginecologia.CURP=? 
-    AND ginecologia.clave = catalogoinsumos.clave 
-    ORDER BY ginecologia.ID DESC"""
-
-    curp = values['-curp-'].upper().strip()
-    with conn_local:
-        lista = conn_local.execute(query,(curp,))
-        for item in lista:
-            global output
-            output += f'--------------------------------\nID: {str(item[0])} | Clave: {str(item[1])} | Fecha: {str(item[2])} | Hora: {str(item[3])} | Servicio: {str(item[4])}\n{str(item[5])}\n'
-
-
-def busqueda_gine_maria():
+def busqueda_gine():
+    """Funcion para buscar registros en la tabla de ginecologia"""
+    global output
     
-    curp = values['-curp-'].upper().strip()
-    
-    try:
-        query = """SELECT ginecologia.ID,ginecologia.clave,ginecologia.fecha, ginecologia.hora,ginecologia.servicio,catalogoinsumos.nombre 
+    if values['-BD-'] == 'BD Local':
+        query = """SELECT ginecologia.ID,ginecologia.clave, ginecologia.fecha, ginecologia.hora, ginecologia.servicio, catalogoinsumos.nombre  
         FROM ginecologia,catalogoinsumos 
-        WHERE ginecologia.CURP=%s 
+        WHERE ginecologia.CURP=? 
         AND ginecologia.clave = catalogoinsumos.clave 
-        ORDER BY ginecologia.ID DESC LIMIT 35"""
-        
-        conn_maria = maria_connect()
+        ORDER BY ginecologia.ID DESC"""
 
-        with conn_maria.cursor() as cursor:
-            cursor.execute(query,(curp,))
-
-            lista = cursor.fetchall()
-        
+        curp = values['-curp-'].upper().strip()
+        with conn_local:
+            lista = conn_local.execute(query,(curp,))
             for item in lista:
-                global output
                 output += f'--------------------------------\nID: {str(item[0])} | Clave: {str(item[1])} | Fecha: {str(item[2])} | Hora: {str(item[3])} | Servicio: {str(item[4])}\n{str(item[5])}\n'
+
+    elif values['-BD-'] == 'BD Maria':
+        try:
+            query = """SELECT ginecologia.ID,ginecologia.clave,ginecologia.fecha, ginecologia.hora,ginecologia.servicio,catalogoinsumos.nombre 
+            FROM ginecologia,catalogoinsumos 
+            WHERE ginecologia.CURP=%s 
+            AND ginecologia.clave = catalogoinsumos.clave 
+            ORDER BY ginecologia.ID DESC LIMIT 35"""
+
+            curp = values['-curp-'].upper().strip()
+        
+            conn_maria = maria_connect()
+
+            with conn_maria.cursor() as cursor:
+                cursor.execute(query,(curp,))
+        
+                for item in cursor.fetchall():
+                    output += f'--------------------------------\nID: {str(item[0])} | Clave: {str(item[1])} | Fecha: {str(item[2])} | Hora: {str(item[3])} | Servicio: {str(item[4])}\n{str(item[5])}\n'
+        
+        except:
+            pass
     
-    except:
-        pass
+    else:
+        sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
 
-def busqueda_pedia_local():
-    query = """SELECT pediatria.ID,pediatria.clave,pediatria.fecha,pediatria.hora, pediatria.servicio, catalogoinsumos.nombre 
-    FROM pediatria,catalogoinsumos 
-    WHERE pediatria.paciente_id=?
-    AND pediatria.CUPI=? 
-    AND pediatria.clave = catalogoinsumos.clave 
-    ORDER BY pediatria.ID DESC"""
+def busqueda_pedia():
+    """Funcion para buscar registros en tabla de pediatria"""
+    global output
 
-    nombre = values['-nombre-'].upper().strip()
-    CUPI = generar_cupi()
-
-    with conn_local:
-        lista = conn_local.execute(query,(nombre,CUPI))
-        for item in lista:
-            global output
-            output += f'--------------------------------\nID: {str(item[0])} | Clave: {str(item[1])} | Fecha: {str(item[2])} | Hora: {str(item[3])} | Servicio: {str(item[4])}\n{str(item[5])}\n'
-
-
-def busqueda_pedia_maria():
-    
-    nombre = values['-nombre-'].upper().strip()
-    CUPI = generar_cupi()
-
-    try:
-
-        query = """SELECT pediatria.ID,pediatria.clave,pediatria.fecha,pediatria.hora,pediatria.servicio,catalogoinsumos.nombre 
+    if values['-BD-'] == 'BD Local':
+        query = """SELECT pediatria.ID,pediatria.clave,pediatria.fecha,pediatria.hora, pediatria.servicio, catalogoinsumos.nombre 
         FROM pediatria,catalogoinsumos 
-        WHERE pediatria.paciente_id=%s
-        AND pediatria.CUPI=%s
+        WHERE pediatria.paciente_id=?
+        AND pediatria.CUPI=? 
         AND pediatria.clave = catalogoinsumos.clave 
-        ORDER BY pediatria.ID DESC LIMIT 35"""
+        ORDER BY pediatria.ID DESC"""
 
-        conn_maria = maria_connect()
+        nombre = values['-nombre-'].upper().strip()
+        CUPI = generar_cupi()
 
-        with conn_maria.cursor() as cursor:
-            cursor.execute(query,(nombre,CUPI))
-
-            lista = cursor.fetchall()
-
+        with conn_local:
+            lista = conn_local.execute(query,(nombre,CUPI))
             for item in lista:
-                global output
                 output += f'--------------------------------\nID: {str(item[0])} | Clave: {str(item[1])} | Fecha: {str(item[2])} | Hora: {str(item[3])} | Servicio: {str(item[4])}\n{str(item[5])}\n'
 
-    except:
-        pass
+    elif values['-BD-'] == 'BD Maria':
+
+        try:
+            query = """SELECT pediatria.ID,pediatria.clave,pediatria.fecha,pediatria.hora,pediatria.servicio,catalogoinsumos.nombre 
+            FROM pediatria,catalogoinsumos 
+            WHERE pediatria.paciente_id=%s
+            AND pediatria.CUPI=%s
+            AND pediatria.clave = catalogoinsumos.clave 
+            ORDER BY pediatria.ID DESC LIMIT 35"""
+
+            nombre = values['-nombre-'].upper().strip()
+            CUPI = generar_cupi()
+
+            conn_maria = maria_connect()
+
+            with conn_maria.cursor() as cursor:
+                cursor.execute(query,(nombre,CUPI))
+
+                for item in cursor.fetchall():
+                    output += f'--------------------------------\nID: {str(item[0])} | Clave: {str(item[1])} | Fecha: {str(item[2])} | Hora: {str(item[3])} | Servicio: {str(item[4])}\n{str(item[5])}\n'
+
+        except:
+            pass
+    
+    else:
+        sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
 
-def busqueda_pclave_local():
-    """Busqueda por palabras clave en BD local"""
+def busqueda_pclave_gine():
+    """Busqueda por palabras clave ginecologia"""
 
     global output
 
     input_usuario = values['-nombre-'].upper().strip()
-    
-        
-    if input_usuario.isdigit():
-        pass
-        
-    elif input_usuario != "" and len(input_usuario) > 2:
-        valor = '%' + input_usuario  + '%'
-        
-        if values['-esp-'] == 'Ginecologia y Obstetricia':
 
+    if input_usuario != "" and len(input_usuario) > 2:
+        valor = f'%{input_usuario}%'
+
+        if values['-BD-'] == 'BD Local':
             query="""SELECT * FROM ginecologia WHERE paciente_id LIKE ? ORDER BY ID DESC"""
                 
             with conn_local:
@@ -466,7 +493,37 @@ def busqueda_pclave_local():
                 for item in lista:
                     output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
 
-        elif values['-esp-'] == 'Pediatria':
+        elif values['-BD-'] == 'BD Maria':
+            try:
+                query="""SELECT * FROM ginecologia WHERE paciente_id LIKE %s ORDER BY ID DESC"""
+
+                conn_maria = maria_connect()    
+            
+                with conn_maria.cursor() as cursor:
+                    cursor.execute(query,(valor,))
+
+                    for item in cursor.fetchall():
+                        output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
+            except:
+                pass
+
+        else:
+            sg.popup('¿CAW?','Selecciona una base de datos!\n')
+
+    else:
+        sg.popup('¿CAW?','Necesitas ingresar al menos 3 letras para iniciar la busqueda!\n')
+
+
+def busqueda_pclave_pedia():
+    """Busqueda por palabras clave en BD Maria"""
+    global output
+
+    input_usuario = values['-nombre-'].upper().strip()
+
+    if input_usuario != "" and len(input_usuario) > 2:
+        valor = f'%{input_usuario}%'    
+        
+        if values['-BD-'] == 'BD Local':
 
             query="""SELECT * FROM pediatria WHERE paciente_id LIKE ? ORDER BY ID DESC"""
                 
@@ -475,70 +532,39 @@ def busqueda_pclave_local():
 
                 for item in lista:
                     output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
+    
+        elif values['-BD-'] == 'BD Maria':
+            try:
+                query="""SELECT * FROM pediatria WHERE paciente_id LIKE %s ORDER BY ID DESC"""
+                
+                conn_maria = maria_connect()
+
+                with conn_maria.cursor() as cursor:
+                    cursor.execute(query,(valor,))
+
+                    for item in cursor.fetchall():
+                        output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
+            
+            except:
+                pass
+
         else:
             sg.popup('¿CAW?','Selecciona una especialidad!\n')
 
     else:
         sg.popup('¿CAW?','Necesitas ingresar al menos 3 letras para continuar la busqueda!\n')
 
-def busqueda_pclave_maria():
-    """Busqueda por palabras clave en BD Maria"""
+
+def busqueda_fecha_gine():
+    """Busqueda por fecha en ginecologia"""
 
     global output
 
-    input_usuario = values['-nombre-'].upper().strip()
-    
-    try:
-        if input_usuario.isdigit():
-            pass
-        
-        elif input_usuario != "" and len(input_usuario) > 2:
-            valor = '%' + input_usuario  + '%'
-        
-            if values['-esp-'] == 'Ginecologia y Obstetricia':
-
-                query="""SELECT * FROM ginecologia WHERE paciente_id LIKE %s ORDER BY ID DESC"""
-
-                conn_maria = maria_connect()    
-            
-                with conn_maria.cursor() as cursor:
-                    lista = cursor.execute(query,(valor,))
-
-                    for item in lista:
-                        output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
-
-            elif values['-esp-'] == 'Pediatria':
-
-                query="""SELECT * FROM pediatria WHERE paciente_id LIKE %s ORDER BY ID DESC"""
-                
-                conn_maria = maria_connect()
-
-                with conn_maria.cursor() as cursor:
-                    lista = cursor.execute(query,(valor,))
-
-                    for item in lista:
-                        output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
-
-            else:
-                sg.popup('¿CAW?','Selecciona una especialidad!\n')
-
-        else:
-            sg.popup('¿CAW?','Necesitas ingresar al menos 3 letras para continuar la busqueda!\n')
-    
-    except:
-        pass
-
-
-def busqueda_fecha_local():
-    """Busqueda por fecha en BD local"""
-
-    global output
-
-    input_usuario = values['-fechab-'].replace("/","-")
+    input_usuario = values['-fechab-'].replace('/','-').replace(',','-').replace('.','-')
         
     if input_usuario != "":
         
-        if values['-esp-'] == 'Ginecologia y Obstetricia':
+        if values['-BD-'] == 'BD Local':
 
             query="""SELECT * FROM ginecologia WHERE fecha= ? ORDER BY ID DESC"""
                 
@@ -548,66 +574,100 @@ def busqueda_fecha_local():
                 for item in lista:
                     output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
 
-        elif values['-esp-'] == 'Pediatria':
-
-            query="""SELECT * FROM pediatria WHERE fecha = ? ORDER BY ID DESC"""
+        elif values['-BD-'] == 'BD Maria':
+            
+            try:
+                query="""SELECT * FROM ginecologia WHERE fecha = %s ORDER BY ID DESC"""
                 
-            with conn_local:
-                lista = conn_local.execute(query,(input_usuario,))
+                conn_maria = maria_connect()
 
-                for item in lista:
-                    output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
+                with conn_maria.cursor() as cursor:
+                    cursor.execute(query,(input_usuario,))
 
+                    for item in cursor.fetchall():
+                        output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
+            except:
+                pass
+            
         else:
-            sg.popup('¿CAW?','Selecciona una especialidad!\n')
+            sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
     else:
         sg.popup('¿CAW?','Necesitas ingresar una fecha!\n')
 
-def busqueda_fecha_maria():
-    """Busqueda por fecha en BD Maria"""
+def busqueda_fecha_pedia():
+    """Busqueda por fecha en pediatria"""
 
     global output
-
-    input_usuario = values['-fechab-'].replace("/","-")
+    input_usuario = values['-fechab-'].replace('/','-')
         
-    try:
-
-        if input_usuario != "":
+    if input_usuario != "":
         
-            if values['-esp-'] == 'Ginecologia y Obstetricia':
+        if values['-BD-'] == 'BD Local':
 
-                query="""SELECT * FROM ginecologia WHERE fecha= %s ORDER BY ID DESC"""
-                
-                conn_maria = maria_connect() 
+            query="""SELECT * FROM pediatria WHERE fecha= ? ORDER BY ID DESC"""
+             
+            with conn_local:
+                lista = conn_local.execute(query,(input_usuario,))
 
-                with conn_maria.cursor() as cursor:
-                    lista = cursor.execute(query,(input_usuario,))
+                for item in lista:
+                        output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
 
-                    for item in lista:
-                        output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
-
-            elif values['-esp-'] == 'Pediatria':
-
+        elif values['-BD-'] == 'BD Maria':
+            try:
                 query="""SELECT * FROM pediatria WHERE fecha = %s ORDER BY ID DESC"""
 
                 conn_maria = maria_connect()    
             
                 with conn_maria.cursor() as cursor:
-                    lista = cursor.execute(query,(input_usuario,))
+                    cursor.execute(query,(input_usuario,))
 
-                    for item in lista:
+                    for item in cursor.fetchall():
                         output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
-
-            else:
-                sg.popup('¿CAW?','Selecciona una especialidad!\n')
-
+            except:
+                pass
+        
         else:
-            sg.popup('¿CAW?','Necesitas ingresar una fecha!\n')
+            sg.popup('¿CAW?','Selecciona una base de datos!\n')
 
-    except:
-        pass
+    else:
+        sg.popup('¿CAW?','Necesitas ingresar una fecha!\n')
 
+def exportar_bd():
+    """Funcion para exportar BD Maria en formato csv"""
+    if values['-esp-'] == 'Pediatria':
+        lista = [('ID','Nombre','CURP','CUPI','clave','fecha','hora','servicio')]
+
+        conn_maria = maria_connect()
+
+        with conn_maria.cursor() as cursor:
+            query = """SELECT ID,paciente_id,CURP,CUPI,clave,fecha,hora,servicio FROM pediatria"""
+            cursor.execute(query)
+        
+            for item in cursor.fetchall():
+                lista.append(item)
+
+        with open('./base_de_datos/backup-pedia.csv','w', encoding='utf-8',newline="\n") as csv_file:
+            csv.writer(csv_file, delimiter=',').writerows(lista)
+
+    elif values['-esp-'] == 'Ginecologia y Obstetricia':
+        lista = [('ID','Nombre','CURP','clave','fecha','hora','servicio')]
+
+        conn_maria = maria_connect()
+
+        with conn_maria.cursor() as cursor:
+            query = """SELECT ID,paciente_id,CURP,clave,fecha,hora,servicio FROM ginecologia"""
+            cursor.execute(query)
+
+            for item in cursor.fetchall():
+                lista.append(item)
+
+        with open('./base_de_datos/backup-gine.csv','w', encoding='utf-8',newline="\n") as csv_file:
+            csv.writer(csv_file, delimiter=',').writerows(lista)
+            
+    else:
+        sg.popup('CAW','No olvides seleccionar una especialidad!\n')    
+    
 
 def generar_cupi():
     """Funcion para generar el CUPI (Clave Unica Pediatrica de Identificacion)"""
@@ -634,9 +694,7 @@ def generar_cupi2():
 
 def sincronizar_maria():
     """Funcion para sincronizar registros de BD local con BD maria"""
-
     #Ambos servicios al mismo tiempo
-
     try:
         with conn_local:
 
@@ -648,7 +706,6 @@ def sincronizar_maria():
 
             lista_pedia = cur.fetchall()
 
-        
             conn_maria = maria_connect()
 
             with conn_maria.cursor() as cursor:
@@ -658,13 +715,11 @@ def sincronizar_maria():
 
                 conn_maria.commit()
 
-
             query2 = """SELECT paciente_id,CURP,clave,fecha,hora,servicio FROM ginecologia WHERE synced=0"""
 
             cur.execute(query2)
 
             lista_gine =  cur.fetchall()
-
 
             with conn_maria.cursor() as cursor:    
 
@@ -698,7 +753,6 @@ def sincronizar_maria():
         pass
 
 
-
 #Interfaz Grafica - PySimpleGUI
 sg.theme('Teal Mono')  # Colores!
 
@@ -714,8 +768,8 @@ Info_Paciente = [
 
 AreaHerramientas = [
     [sg.Button('Ultimos registros por especialidad'),sg.Button('Busqueda por palabras clave')],
-    [sg.CalendarButton('Calendario', target=(1,1), auto_size_button=True, format='%Y/%m/%d'),
-     sg.Input(size=(13,2), key='-fechab-'),sg.Button('Busqueda por fecha')],
+    [sg.CalendarButton('Calendario',target=('-fechab-'), auto_size_button=True, format='%Y/%m/%d'), 
+     sg.Input(size=(17,2), key='-fechab-'),sg.Button('Busqueda por fecha')],
     [sg.Button('Exportar Base de Datos')]
 ]
 
@@ -759,276 +813,153 @@ while True:  # Mantenerla persistente
     #Herramientas del explorador
     #Ultimos 300 registros
     elif event == 'Ultimos registros por especialidad':
-        if values['-BD-'] == 'BD Local':
-            if values['-esp-'] == 'Ginecologia y Obstetricia':
-                u_300_gine_local()
-                window['-output-'].update(output)
-                output = ""
+        if values['-esp-'] == 'Ginecologia y Obstetricia':
+            u_300_gine()
+            window['-output-'].update(output)
+            output = ""
         
-            elif values['-esp-'] == 'Pediatria':
-                u_300_pedia_local()
-                window['-output-'].update(output)
-                output = ""
+        elif values['-esp-'] == 'Pediatria':
+            u_300_pedia()
+            window['-output-'].update(output)
+            output = ""
             
-            else:
-                sg.popup('¿CAW?','No olvides seleccionar una especialidad!\n')
-
-        elif values['-BD-'] == 'BD Maria':
-            if values['-esp-'] == 'Ginecologia y Obstetricia':
-                u_300_gine_maria()
-                window['-output-'].update(output)
-                output = ""
-        
-            elif values['-esp-'] == 'Pediatria':
-                u_300_pedia_maria()
-                window['-output-'].update(output)
-                output = ""
-            
-            else:
-                sg.popup('¿CAW?','No olvides seleccionar una especialidad!\n')
-
         else:
-            sg.popup('¿CAW?','Selecciona una base de datos!\n')
+            sg.popup('¿CAW?','Selecciona una especialidad!\n')
     
     #Busqueda por palabras clave
     elif event == 'Busqueda por palabras clave':
-        if values['-BD-'] == 'BD Local':
-            busqueda_pclave_local()
+        if values['-esp-'] == 'Ginecologia y Obstetricia':
+            busqueda_pclave_gine()
             window['-output-'].update(output)
             output = ""
 
-        elif values['-BD-'] == 'BD Maria':
-            busqueda_pclave_maria()
+        elif values['-esp-'] == 'Pediatria':
+            busqueda_pclave_pedia()
             window['-output-'].update(output)
             output = ""
         
         else:
-            sg.popup('¿CAW?','Selecciona una base de datos!\n')
+            sg.popup('¿CAW?','Selecciona una especialidad!\n')
 
     #Busqueda por fecha
     elif event == 'Busqueda por fecha':
-        if values['-BD-'] == 'BD Local':
-            busqueda_fecha_local()
+        if values['-esp-'] == 'Ginecologia y Obstetricia':
+            busqueda_fecha_gine()
             window['-output-'].update(output)
             output = ""
 
-        elif values['-BD-'] == 'BD Maria':
-            busqueda_fecha_maria()
+        elif values['-esp-'] == 'Pediatria':
+            busqueda_fecha_pedia()
             window['-output-'].update(output)
             output = ""
+        
+        else:
+            sg.popup('¿CAW?','Selecciona una especialidad!\n')
+
+    #Exportar base de datos
+    elif event == 'Exportar Base de Datos':
+        if values['-BD-'] == 'BD Local':
+            sg.popup('¿CAW?','Solo es posible hacer respaldo de la BD Maria\n')
+
+        elif values['-BD-'] == 'BD Maria':
+            try:
+                exportar_bd()
+            except:
+                pass
         
         else:
             sg.popup('¿CAW?','Selecciona una base de datos!\n')
         
-    
     #Modificar registros
     elif event == 'Modificar Registro':
-        if values['-BD-'] == 'BD Local':
+        if values['-ID-'].isdigit() and values['-ID-'] != "":
             if values['-esp-'] == 'Ginecologia y Obstetricia':
-                if values['-ID-'].isdigit() and values['-ID-'] != "":
-                    modificar_registro_gine()
-                    if values['-curp-'] != "": 
-                        busqueda_gine_local()
-                        window['-output-'].update(output)
-                        output = ""
-                        
-                    elif values['-curp-'] == "":
-                        u_300_gine_local()
-                        window['-output-'].update(output)
-                        output = ""
-
+                modificar_registro_gine()
                 
-                else:
-                    sg.popup('CAW','El ID del registro es el elemento mas importante!\n\nAsegurate de que sea el correcto (¡y que sea un numero!)')
-            
-            elif values['-esp-'] == 'Pediatria':
-                if values['-ID-'].isdigit() and values['-ID-'] != "":
-                    modificar_registro_pedia()
-                    if values['-nombre-'] != "": 
-                        busqueda_pedia_local()
-                        window['-output-'].update(output)
-                        output = ""
+                if values['-curp-'] != "": 
+                    busqueda_gine()
+                    window['-output-'].update(output)
+                    output = ""
+                        
+                elif values['-curp-'] == "":
+                    u_300_gine()
+                    window['-output-'].update(output)
+                    output = ""
+
+            elif values['-esp-'] == 'Pediatria':    
+                modificar_registro_pedia()
+                
+                if values['-nombre-'] != "": 
+                    busqueda_pedia()
+                    window['-output-'].update(output)
+                    output = ""
                     
-                    elif values['-nombre-'] == "":
-                        u_300_pedia_local()
-                        window['-output-'].update(output)
-                        output = ""
-                
-                else:
-                    sg.popup('CAW','El ID del registro es el elemento mas importante!\n\nAsegurate de que sea el correcto (¡y que sea un numero!)')
-            
+                elif values['-nombre-'] == "":
+                    u_300_pedia()
+                    window['-output-'].update(output)
+                    output = ""
+
             else:
-                sg.popup('CAW','No olvides seleccionar una especialidad!')
-        
-        #BD Maria
-        elif values['-BD-'] == 'BD Maria':
-            if values['-esp-'] == 'Ginecologia y Obstetricia':
-                if values['-ID-'].isdigit() and values['-ID-'] != "":
-                    modificar_registro_gine()
-                    if values['-curp-'] != "": 
-                        busqueda_gine_maria()
-                        window['-output-'].update(output)
-                        output = ""
-                        
-                    elif values['-curp-'] == "":
-                        u_300_gine_maria()
-                        window['-output-'].update(output)
-                        output = ""
-                
-                else:
-                    sg.popup('CAW','El ID del registro es el elemento mas importante!\n\nAsegurate de que sea el correcto (¡y que sea un numero!)')
-
-            elif values['-esp-'] == 'Pediatria':
-                if values['-ID-'].isdigit() and values['-ID-'] != "":
-                    modificar_registro_pedia()
-                    if values['-nombre-'] != "": 
-                        busqueda_pedia_maria()
-                        window['-output-'].update(output)
-                        output = ""
-                        
-                    elif values['-nombre-'] == "":
-                        u_300_pedia_maria()
-                        window['-output-'].update(output)
-                        output = ""
-
-                else:
-                    sg.popup('CAW','El ID del registro es el elemento mas importante!\n\nAsegurate de que sea el correcto (¡y que sea un numero!)')
-            
-            else:
-                sg.popup('CAW','No olvides seleccionar una especialidad!')
-
+                sg.popup('CAW','No olvides seleccionar una especialidad!\n')
         else:
-            sg.popup('CAW','No olvides seleccionar una base de datos!')
+            sg.popup('CAW','El ID del registro es el elemento mas importante!\n\nAsegurate de que sea el correcto (¡y que sea un numero!)\n')
 
-    #Borrar Registro
+    #Borrar Registros
     elif event == 'Borrar Registro':
-        if values['-esp-'] == 'Ginecologia y Obstetricia':
-            if values['-ID-'].isdigit() and values['-ID-'] != "":
+        if values['-ID-'].isdigit() and values['-ID-'] != "":
+            if values['-esp-'] == 'Ginecologia y Obstetricia':
                 answer = sg.popup_yes_no('¿Estas seguro que desea borrar el registro?')
                 if answer == 'Yes':
                     borrar_registro_gine()
                     if values['-curp-'] != "": 
-                        busqueda_gine_local()
+                        busqueda_gine()
                         window['-output-'].update(output)
                         output = ""
                         
                     elif values['-curp-'] == "":
-                        if values['-BD-'] == "BD Local":
-                            u_300_gine_local()
-
-                        elif values['-BD-'] == "BD Maria":
-                            u_300_gine_maria()
-
+                        u_300_gine()
                         window['-output-'].update(output)
                         output = ""
 
-            else:
-                sg.popup('CAW','El ID del registro es el elemento mas importante!\n\nAsegurate de que sea el correcto (¡y que sea un numero!)')
-                
-        
-        elif values['-esp-'] == 'Pediatria':
-            if values['-ID-'].isdigit() and values['-ID-'] != "":
+            elif values['-esp-'] == 'Pediatria':
                 answer = sg.popup_yes_no('¿Estas seguro que desea borrar el registro?')
                 if answer == 'Yes':
                     borrar_registro_pedia()
                     if values['-nombre-'] != "": 
-                        busqueda_pedia_local()
+                        busqueda_pedia()
                         window['-output-'].update(output)
                         output = ""
                         
                     elif values['-nombre-'] == "":
-                        if values['-BD-'] == "BD Local":
-                            u_300_pedia_local()
-
-                        elif values['-BD-'] == "BD Maria":
-                            u_300_pedia_maria()
+                        u_300_pedia()
                         window['-output-'].update(output)
                         output = ""
             else:
-                sg.popup('CAW','El ID del registro es el elemento mas importante!\n\nAsegurate de que sea el correcto (¡y que sea un numero!)')
-
+                sg.popup('¿CAW?','No olvides seleccionar una especialidad!\n')
         else:
-            sg.popup('¿CAW?','No olvides seleccionar una especialidad!\n')
+            sg.popup('CAW','El ID del registro es el elemento mas importante!\n\nAsegurate de que sea el correcto (¡y que sea un numero!)')
         
-
+    #Buscar Registros
     elif event == 'Buscar Registros':
-        if values['-BD-'] == 'BD Local':
-            if values['-esp-'] == 'Ginecologia y Obstetricia':
-                if values['-nombre-'].lower() != '' and values['-curp-'].lower() != '':
-                    busqueda_gine_local()
-
-                    if output == "":
-                        sg.popup('Sin Resultados','El paciente no existe en la base de datos\n\nIntenta de nuevo\n\nTip: Verifica el nombre, curp o servicio\n')
-                    
-                    else:
-                        window['-output-'].update(output)
-                        output = ""
-                else:
-                    sg.popup('¿CAW?','No olvides escribir nombre y curp!\n')
+        if values['-esp-'] == 'Ginecologia y Obstetricia':
+            if values['-nombre-'] != '' and values['-curp-'] != '':
+                busqueda_gine()
+                window['-output-'].update(output)
+                output = ""
+            
+            else:
+                sg.popup('¿CAW?','No olvides los datos del paciente! (Nombre y CURP)\n')
    
-            elif values['-esp-'] == 'Pediatria':
-                if values['-nombre-'].lower() != '':
-                    if len(values['-fn-']) == 10:
-                        if values['-masc-'] or values['-fem-']: 
-                            busqueda_pedia_local()
-                
-                            if output == "":
-                                sg.popup('Sin Resultados','El paciente no existe en la base de datos\n\nIntenta de nuevo\n\nTip: Verifica el nombre o servicio (CURP es opcional)\n')
-                            else:
-                                window['-output-'].update(output)
-                                output = ""
-                        
-                        else:
-                            sg.popup('¿CAW?','No olvides seleccionar el sexo! Super importante!\n')
-
-                    else:
-                        sg.popup('¿CAW?','No olvides ingresar la fecha de nacimiento!\n')
-
-                else:
-                    sg.popup('¿CAW?','No olvides escribir nombre (CURP es opcional)!\n')
+        elif values['-esp-'] == 'Pediatria':
+            if values['-nombre-'] != '' and len(values['-fn-']) == 10:
+                busqueda_pedia()
+                window['-output-'].update(output)
+                output = ""
 
             else:
-                sg.popup('¿CAW?','No olvides seleccionar un servicio!\n')
-
-        elif values['-BD-'] == 'BD Maria':
-            if values['-esp-'] == 'Ginecologia y Obstetricia':
-                if values['-nombre-'].lower() != '' and values['-curp-'].lower() != '':
-                    busqueda_gine_maria()
-
-                    if output == "":
-                        sg.popup('Sin Resultados','El paciente no existe en la base de datos\n\nIntenta de nuevo\n\nTip: Verifica el nombre, curp o servicio\n')
-                    
-                    else:
-                        window['-output-'].update(output)
-                        output = ""
-                else:
-                    sg.popup('¿CAW?','No olvides escribir nombre y curp!\n')
-   
-            elif values['-esp-'] == 'Pediatria':
-                if values['-nombre-'].lower() != '':
-                    if len(values['-fn-']) == 10:
-                        if values['-masc-'] or values['-fem-']: 
-                            busqueda_pedia_maria()
-                
-                            if output == "":
-                                sg.popup('Sin Resultados','El paciente no existe en la base de datos\n\nIntenta de nuevo\n\nTip: Verifica el nombre o servicio (CURP es opcional)\n')
-                            else:
-                                window['-output-'].update(output)
-                                output = ""
-                        
-                        else:
-                            sg.popup('¿CAW?','No olvides seleccionar el sexo! Super importante!\n')
-
-                    else:
-                        sg.popup('¿CAW?','No olvides ingresar la fecha de nacimiento!\n')
-
-                else:
-                    sg.popup('¿CAW?','No olvides escribir nombre (CURP es opcional)!\n')
-
-            else:
-                sg.popup('¿CAW?','No olvides seleccionar un servicio!\n')
+                sg.popup('¿CAW?','No olvides los datos del paciente! (Nombre y Fecha Nacimiento)\n')
 
         else:
-            sg.popup('¿CAW?','Selecciona una base de datos!\n')
+            sg.popup('¿CAW?','No olvides seleccionar un servicio!\n')
 
 window.close()

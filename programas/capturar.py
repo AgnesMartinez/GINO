@@ -4,6 +4,7 @@ from datetime import date, datetime
 from docx import Document
 import concurrent.futures
 import pymysql.cursors
+import random
 
 #conectar a base de datos local
 DEFAULT_PATH = "./base_de_datos/db.sqlite3"
@@ -41,7 +42,9 @@ catalogo = {}
 mcombo = []
 alista = []
 rreporte = []
-
+px_gine = {}
+px_pedia = {}
+px_combo = []
 
 with conn_local:
     query = """SELECT clave,nombre FROM catalogoinsumos ORDER BY nombre"""
@@ -49,6 +52,30 @@ with conn_local:
     for item in lista:
         catalogo[item[1]] = item[0]
         mcombo.append(item[1])
+
+def lista_pacientes_gine():
+    """Extraer pacientes hospitalizados en ginecologia de BD Maria"""
+    conn_maria = maria_connect()
+
+    with conn_maria.cursor() as cursor:
+        query = """SELECT nombre,CURP FROM pacientes_gine WHERE status = 'hospitalizado' ORDER BY nombre"""
+        cursor.execute(query)
+
+        for item in cursor.fetchall():
+            px_gine[item[0]] = item[1]
+            px_combo = item[0]
+
+def lista_pacientes_pedia():
+    """Extraer pacientes hospitalizados en pediatria de BD Maria"""
+    conn_maria = maria_connect()
+
+    with conn_maria.cursor() as cursor:
+        query = """SELECT nombre,CURP FROM pacientes_pedia WHERE status = 'hospitalizado' ORDER BY nombre"""
+        cursor.execute(query)
+
+        for item in cursor.fetchall():
+            px_pedia[item[0]] = item[1]
+            px_combo = item[0]
     
 
 def reporte_gine():
@@ -155,8 +182,7 @@ def agregar_gine_maria():
 
 
 def agregar_pedia_local():
-    
-    CUPI = generar_cupi()
+
     valores = (values['-nombre-'].upper().strip(),values['-curp-'].upper().strip(),CUPI,insumo,fechahoy,tiempo,values['-servicio-'])
     
     query = """INSERT INTO pediatria (paciente_id,CURP,CUPI,clave,fecha,hora,servicio) VALUES (?,?,?,?,?,?,?)"""
@@ -365,35 +391,29 @@ def busqueda_catalogoinsumos():
                     else:
                         alista.append(item[1])
 
-def generar_cupi():
-    """Funcion para generar el CUPI (Clave Unica Pediatrica de Identificacion)"""
-    apellidos = values['-nombre-'].upper().strip().replace('RN','').split()
-    fn = values['-fn-'].replace('/','')
-    if values['-masc-']:
-        sexo = "H"
-    elif values['-fem-']:
-        sexo = "M"
-    CUPI = f'{apellidos[0][0:2]}{apellidos[1][0:2]}{fn[2:]}{sexo}'
-    return CUPI
 
 
 #Interfaz Grafica - PySimpleGUI
-sg.theme('Teal Mono')  # Colores!
+# Colores!
+if random.randint(0,1000) == 666:
+    sg.theme('HotDogStand')
+else:
+    sg.theme('Teal Mono')  
 
 #Elementos en ventana
 
 menuprincipal = [
     ['Inventario', ['Capturar Existencias', 'Capturar Salidas']],
+    ['Pacientes',['Ingresar Paciente', 'Egresar Paciente']],
     ['Ayuda', ['Instrucciones','Acerca de...' ]]
 ]
 
 Info_Paciente = [
-    [sg.Text('Nombre del paciente'), sg.Input(size=(40,2), key='-nombre-'),sg.Text('CURP'), sg.Input(size=(20,2), key='-curp-')],
-    [ sg.Text('Servicio'), 
-     sg.Combo(['Urgencias GyO','Labor / Toco (GyO)','Quirofano GyO','Alojamiento Conjunto GyO','Modulo Mater','Urgencias Pediatria',
-    'Labor / Toco (Pediatria)', 'Quirofano Pediatria','UCIN','Cunero Patologico','Cuidados Intermedios',
-    'Alojamiento Conjunto Pediatria'], size=(25,12), readonly=True, key='-servicio-'), sg.CalendarButton('Fecha de Nacimiento', target=(1,3), auto_size_button=True, format='%Y/%m/%d'), 
-     sg.Input(size=(13,2), key='-fn-'), sg.Radio('Masculino', "RADIO1",key='-masc-'), sg.Radio('Femenino', "RADIO1",default=True, key='-fem-')]
+    [sg.Text('Servicio'), sg.Combo(['Urgencias GyO','Labor / Toco (GyO)','Quirofano GyO','Alojamiento Conjunto GyO',
+    'Modulo Mater','Urgencias Pediatria','Labor / Toco (Pediatria)', 'Quirofano Pediatria','UCIN',
+    'Cunero Patologico','Cuidados Intermedios','Alojamiento Conjunto Pediatria'], 
+    size=(25,12), readonly=True, key='-servicio-')],
+    [sg.Text('Nombre del paciente'), sg.Combo(['RN LOPEZ GUAPELL'], size=(70,6), key='-paciente-')]
 ]
 
 AreaCaptura = [
@@ -412,34 +432,75 @@ AreaRegistros = [
 
 # Acomodo de elementos de ventana
 layout = [
-    [sg.Menu(menuprincipal, tearoff=True)],
+    [sg.Menu(menuprincipal)],
     [sg.Frame('Identificacion del paciente', Info_Paciente)],
     [sg.Frame('Busqueda y captura de material hospitalario', AreaCaptura)],
     [sg.Frame('Consulta de movimientos', AreaRegistros)]
 ]
 
-#Ventana
-window = sg.Window('HMI - Captura de datos', layout)
+#Ventanas, todas activas, cada una tiene su propia lectura de pantalla
+pxiwindow_active = False
+pxewindow_active = False
 
+main_window = sg.Window('HMI - Captura de datos', layout)
 #Sincronizar registros pendientes despues de iniciar la ventana
-with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-    executor.submit(sincronizar_maria())
+#with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+#    executor.submit(sincronizar_maria())
 
 
 #Parte funcional de la aplicacion
 
 while True:  # Mantenerla persistente
 
-    event, values = window.read()
+    event1, values1 = main_window.read()
 
-    if event == 'Capturar Existencias':
-        print(event,values)
+    if event1 == 'Ingresar Paciente':
+        pxiwindow_active = True
+        layout2 = [
+        [sg.Text('Buscar Paciente')],
+        [sg.Text('Especialidad'),sg.Combo(['Ginecologia y Obstetricia', 'Pediatria'], size=(25,2), readonly=True, key='-esp-')],
+        [sg.Text('CURP'),sg.Input(size=(25,2),key='-curp1-'),sg.Button('Buscar'), sg.Button('Borrar Seleccion')],
+        [sg.Listbox(values='',size=(100, 8), key='-lista_px1-')],
+        [sg.Text('Registrar paciente nuevo')],
+        [sg.Text('Nombre'),sg.Input(size=(30,2),key='-nom2-'),sg.Text('CURP'),
+         sg.Input(size=(20,2),key='-curp2-'),sg.Button('Agregar Paciente'), sg.Button('Salir')]
+        ]
 
-    if event == sg.WIN_CLOSED:
+        win2 = sg.Window('Ingresar / Buscar Pacientes',layout2)
+
+        if pxiwindow_active:
+            event2, values2 = win2.read()
+            if event2 == sg.WIN_CLOSED or event2 == 'Salir':
+                pxiwindow_active =  False
+                win2.close()
+            else:
+                print(event2,values2)
+        
+    elif event1 == 'Egresar Paciente':
+        pxewindow_active = True
+        layout3 = [
+        [sg.Text('Buscar Paciente')],
+        [sg.Text('Especialidad'),sg.Combo(['Ginecologia y Obstetricia', 'Pediatria'], size=(25,2), readonly=True, key='-esp-')],
+        [sg.Text('CURP'),sg.Input(size=(20,2),key='-curp3-'),sg.Button('Buscar'),sg.Button('Borrar Seleccion')],
+        [sg.Listbox(values='',size=(100, 8), key='-lista_px2-')],
+        [sg.Button('Egresar Paciente'), sg.Button('Salir')]
+        ]
+
+        win3 = sg.Window('Egresar Paciente',layout3)
+
+        if pxewindow_active:
+            event3, values3 = win3.read()
+            if event3 == sg.WIN_CLOSED or event2 == 'Salir':
+                pxewindow_active =  False
+                win3.close()
+            else:
+                print(event3,values3)
+    
+    elif event1 == sg.WIN_CLOSED:
         break
     
     #Buscar insumos
-    elif event == 'Buscar insumo':
+    elif event1 == 'Buscar insumo':
         if values['-busnom-'] != '':
             busqueda_catalogoinsumos()
             window['-linsumo-'].update(alista)
@@ -448,18 +509,18 @@ while True:  # Mantenerla persistente
             sg.popup('¿CAW?','No olvides escribir en la casilla de busqueda\n')
 
     #borrar seleccion
-    elif event == 'Borrar Seleccion':
+    elif event1 == 'Borrar Seleccion':
         alista = []
         window['-linsumo-'].update(alista)
         
     #Buscar registros
-    elif event == 'Buscar Registros':
+    elif event1 == 'Buscar Registros':
         if values['-servicio-'] == 'Urgencias GyO' or values['-servicio-'] == 'Labor / Toco (GyO)' or values['-servicio-'] == 'Quirofano GyO' or values['-servicio-'] == 'Alojamiento Conjunto GyO' or values['-servicio-'] == 'Modulo Mater':
             if values['-nombre-'] != '' and values['-curp-'] != '':
                 busqueda_gine()
                 
                 if output_gine == "":
-                    sg.popup('Baia Baia','El paciente no existe en la base de datos\n\nIntenta de nuevo\n\nTip: Verifica el nombre, curp o servicio\n')
+                    sg.popup('Sin resultados','El paciente no existe en la base de datos\n\nIntenta de nuevo\n\nTip: Verifica el nombre, curp o servicio\n')
                 else:
                     window['-output-'].update(output_gine)
                     output_gine = ""
@@ -481,7 +542,7 @@ while True:  # Mantenerla persistente
             sg.popup('¿CAW?','No olvides seleccionar un servicio\n')       
     
     #Imprimir Reporte
-    elif event == 'Imprimir Reporte':
+    elif event1 == 'Imprimir Reporte':
         if values['-servicio-'] == 'Urgencias GyO' or values['-servicio-'] == 'Labor / Toco (GyO)' or values['-servicio-'] == 'Quirofano GyO' or values['-servicio-'] == 'Alojamiento Conjunto GyO' or values['-servicio-'] == 'Modulo Mater':
             if values['-nombre-'] != '' and values['-curp-'] != '':
                 reporte_gine()
@@ -499,7 +560,7 @@ while True:  # Mantenerla persistente
             sg.popup('¿CAW?','No olvides seleccionar un servicio\n')
 
     #Enviar Datos
-    elif event == 'Agregar Registro':
+    elif event1 == 'Agregar Registro':
         if values['-servicio-'] == 'Urgencias GyO' or values['-servicio-'] == 'Labor / Toco (GyO)' or values['-servicio-'] == 'Quirofano GyO' or values['-servicio-'] == 'Alojamiento Conjunto GyO' or values['-servicio-'] == 'Modulo Mater':
             if values['-nombre-'] != '' and values['-curp-'] != '' and values['-cantidad-'].isdigit() and int(values['-cantidad-']) < 20:
                 if values['-linsumo-'] != []:
@@ -558,4 +619,4 @@ while True:  # Mantenerla persistente
         else:
             sg.popup('¿CAW?','No haz elegido servicio! no puedo trabajar asi\n')
 
-window.close()
+main_window.close()

@@ -24,7 +24,6 @@ def maria_connect():
             database="hmi",
             port=3307
         )
-        
         return conn
 
     except:
@@ -464,7 +463,7 @@ while True:  # Mantenerla persistente
                     window['-output-'].update(output_gine)
                     output_gine = ""
             else:
-                    sg.popup('¿CAW?','No olvides escribir nombre y curp!\n')
+                    sg.popup('¿CAW?','No olvides los datos del paciente! (Nombre y CURP)\n')
 
         elif values['-servicio-'] == 'Urgencias Pediatria' or values['-servicio-'] == 'Labor / Toco (Pediatria)' or values['-servicio-'] == 'Quirofano Pediatria' or values['-servicio-'] == 'UCIN' or values['-servicio-'] == 'Cunero Patologico' or values['-servicio-'] =='Cuidados Intermedios' or values['-servicio-'] == 'Alojamiento Conjunto Pediatria':
             if values['-nombre-'] != '' and len(values['-fn-']) == 10:
@@ -483,17 +482,20 @@ while True:  # Mantenerla persistente
     #Imprimir Reporte
     elif event == 'Imprimir Reporte':
         if values['-servicio-'] == 'Urgencias GyO' or values['-servicio-'] == 'Labor / Toco (GyO)' or values['-servicio-'] == 'Quirofano GyO' or values['-servicio-'] == 'Alojamiento Conjunto GyO' or values['-servicio-'] == 'Modulo Mater':
-            reporte_gine()
-            rreporte = []
+            if values['-nombre-'] != '' and values['-curp-'] != '':
+                reporte_gine()
+                rreporte = []
+            else:
+                sg.popup('¿CAW?','No olvides los datos del paciente! (Nombre y CURP)\n')
         
         elif values['-servicio-'] == 'Urgencias Pediatria' or values['-servicio-'] == 'Labor / Toco (Pediatria)' or values['-servicio-'] == 'Quirofano Pediatria' or values['-servicio-'] == 'UCIN' or values['-servicio-'] == 'Cunero Patologico' or values['-servicio-'] =='Cuidados Intermedios' or values['-servicio-'] == 'Alojamiento Conjunto Pediatria':
-            if len(values['-fn-']) == 10:
+            if values['-nombre-'] != '' and len(values['-fn-']) == 10:
                 reporte_pedia()
                 rreporte = []            
             else:
-                sg.popup('¿CAW?','No olvides la fecha de nacimiento!\n')
+                sg.popup('¿CAW?','No olvides los datos del paciente! (Nombre y Fecha Nacimiento)\n')
         else:
-            sg.popup('¿CAW?','No olvides seleccionar un servicio')
+            sg.popup('¿CAW?','No olvides seleccionar un servicio\n')
 
     #Enviar Datos
     elif event == 'Agregar Registro':

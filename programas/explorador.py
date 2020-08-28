@@ -3,6 +3,7 @@ import sqlite3
 from datetime import date
 import concurrent.futures
 import pymysql.cursors
+import csv
 
 #conectar a base de datos local
 DEFAULT_PATH = "./base_de_datos/db.sqlite3"
@@ -63,10 +64,8 @@ def u_300_gine():
             with conn_maria.cursor() as cursor:
         
                 cursor.execute(query)
-
-                lista = cursor.fetchall()
         
-                for item in lista:
+                for item in cursor.fetchall():
                     output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
         except:
             pass
@@ -96,9 +95,7 @@ def u_300_pedia():
 
                 cursor.execute(query)
 
-                lista = cursor.fetchall()
-
-                for item in lista:
+                for item in cursor.fetchall():
                     output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
         except:
             pass
@@ -419,10 +416,8 @@ def busqueda_gine():
 
             with conn_maria.cursor() as cursor:
                 cursor.execute(query,(curp,))
-
-                lista = cursor.fetchall()
         
-                for item in lista:
+                for item in cursor.fetchall():
                     output += f'--------------------------------\nID: {str(item[0])} | Clave: {str(item[1])} | Fecha: {str(item[2])} | Hora: {str(item[3])} | Servicio: {str(item[4])}\n{str(item[5])}\n'
         
         except:
@@ -470,9 +465,7 @@ def busqueda_pedia():
             with conn_maria.cursor() as cursor:
                 cursor.execute(query,(nombre,CUPI))
 
-                lista = cursor.fetchall()
-
-                for item in lista:
+                for item in cursor.fetchall():
                     output += f'--------------------------------\nID: {str(item[0])} | Clave: {str(item[1])} | Fecha: {str(item[2])} | Hora: {str(item[3])} | Servicio: {str(item[4])}\n{str(item[5])}\n'
 
         except:
@@ -508,9 +501,9 @@ def busqueda_pclave_gine():
                 conn_maria = maria_connect()    
             
                 with conn_maria.cursor() as cursor:
-                    lista = cursor.execute(query,(valor,))
+                    cursor.execute(query,(valor,))
 
-                    for item in lista:
+                    for item in cursor.fetchall():
                         output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
             except:
                 pass
@@ -548,9 +541,9 @@ def busqueda_pclave_pedia():
                 conn_maria = maria_connect()
 
                 with conn_maria.cursor() as cursor:
-                    lista = cursor.execute(query,(valor,))
+                    cursor.execute(query,(valor,))
 
-                    for item in lista:
+                    for item in cursor.fetchall():
                         output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
             
             except:
@@ -568,7 +561,7 @@ def busqueda_fecha_gine():
 
     global output
 
-    input_usuario = values['-fechab-'].replace("/","-")
+    input_usuario = values['-fechab-'].replace('/','-').replace(',','-').replace('.','-')
         
     if input_usuario != "":
         
@@ -592,9 +585,7 @@ def busqueda_fecha_gine():
                 with conn_maria.cursor() as cursor:
                     cursor.execute(query,(input_usuario,))
 
-                    lista = cursor.fetchall()
-
-                    for item in lista:
+                    for item in cursor.fetchall():
                         output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  Clave: {str(item[3])}  |  Fecha: {str(item[4])}  |  Hora: {str(item[5])}  |  Servicio: {str(item[6])}\n'
             except:
                 pass
@@ -632,9 +623,7 @@ def busqueda_fecha_pedia():
                 with conn_maria.cursor() as cursor:
                     cursor.execute(query,(input_usuario,))
 
-                    lista = cursor.fetchall()
-
-                    for item in lista:
+                    for item in cursor.fetchall():
                         output += f'--------------------------------\nID: {str(item[0])}  |  Nombre: {str(item[1])}  |  CURP: {str(item[2])}  |  CUPI: {str(item[3])} | Clave: {str(item[4])}  |  Fecha: {str(item[5])}  |  Hora: {str(item[6])}  |  Servicio: {str(item[7])}\n'
             except:
                 pass
@@ -645,6 +634,41 @@ def busqueda_fecha_pedia():
     else:
         sg.popup('¿CAW?','Necesitas ingresar una fecha!\n')
 
+def exportar_bd():
+    """Funcion para exportar BD Maria en formato csv"""
+    if values['-esp-'] == 'Pediatria':
+        lista = [('ID','Nombre','CURP','CUPI','clave','fecha','hora','servicio')]
+
+        conn_maria = maria_connect()
+
+        with conn_maria.cursor() as cursor:
+            query = """SELECT ID,paciente_id,CURP,CUPI,clave,fecha,hora,servicio FROM pediatria"""
+            cursor.execute(query)
+        
+            for item in cursor.fetchall():
+                lista.append(item)
+
+        with open('./base_de_datos/backup-pedia.csv','w', encoding='utf-8',newline="\n") as csv_file:
+            csv.writer(csv_file, delimiter=',').writerows(lista)
+
+    elif values['-esp-'] == 'Ginecologia y Obstetricia':
+        lista = [('ID','Nombre','CURP','clave','fecha','hora','servicio')]
+
+        conn_maria = maria_connect()
+
+        with conn_maria.cursor() as cursor:
+            query = """SELECT ID,paciente_id,CURP,clave,fecha,hora,servicio FROM ginecologia"""
+            cursor.execute(query)
+
+            for item in cursor.fetchall():
+                lista.append(item)
+
+        with open('./base_de_datos/backup-gine.csv','w', encoding='utf-8',newline="\n") as csv_file:
+            csv.writer(csv_file, delimiter=',').writerows(lista)
+            
+    else:
+        sg.popup('CAW','No olvides seleccionar una especialidad!\n')    
+    
 
 def generar_cupi():
     """Funcion para generar el CUPI (Clave Unica Pediatrica de Identificacion)"""
@@ -735,9 +759,14 @@ sg.theme('Teal Mono')  # Colores!
 
 #Elementos en ventana         
 
+menuprincipal = [
+    ['Pacientes', ['Ingreso Paciente', 'Egreso Paciente']],
+    ['Ayuda', ['Instrucciones','Acerca de...' ]]
+]
+
 Info_Paciente = [
     [sg.Text('Nombre del paciente'), sg.Input(size=(45,2), key='-nombre-'), sg.Text('CURP'), sg.Input(size=(20,2), key='-curp-')],
-    [sg.Text('(Solo Pediatria)'),sg.CalendarButton('Fecha de Nacimiento', target=(1,2), auto_size_button=True, format='%Y/%m/%d'), 
+    [sg.Text('(Solo Pediatria)'),sg.CalendarButton('Fecha de Nacimiento', target=('-fn-'), auto_size_button=True, format='%Y/%m/%d'), 
      sg.Input(size=(13,2), key='-fn-'), sg.Radio('Masculino', "RADIO1",key='-masc-'), sg.Radio('Femenino', "RADIO1",default=True, key='-fem-')],
     [sg.Text('Especialidad'),sg.Combo(['Ginecologia y Obstetricia', 'Pediatria'], size=(25,2), readonly=True, key='-esp-'), sg.Text('Base de Datos'),
      sg.Combo(['BD Local', 'BD Maria'], size=(15,2), readonly=True, key='-BD-'), sg.Text('   '), sg.Button('Buscar Registros')]
@@ -745,8 +774,8 @@ Info_Paciente = [
 
 AreaHerramientas = [
     [sg.Button('Ultimos registros por especialidad'),sg.Button('Busqueda por palabras clave')],
-    [sg.CalendarButton('Calendario', target=(1,1), auto_size_button=True, format='%Y/%m/%d'),
-     sg.Input(size=(13,2), key='-fechab-'),sg.Button('Busqueda por fecha')],
+    [sg.CalendarButton('Calendario',target=('-fechab-'), auto_size_button=True, format='%Y/%m/%d'), 
+     sg.Input(size=(17,2), key='-fechab-'),sg.Button('Busqueda por fecha')],
     [sg.Button('Exportar Base de Datos')]
 ]
 
@@ -760,7 +789,7 @@ AreaCambios = [
     'Labor / Toco (GyO)','Quirofano GyO','Alojamiento Conjunto GyO','Modulo Mater','Urgencias Pediatria',
     'Labor / Toco (Pediatria)', 'Quirofano Pediatria','UCIN','Cunero Patologico','Cuidados Intermedios',
     'Alojamiento Conjunto Pediatria'], size=(35,12), readonly=True, key='-servicio-')],
-    [sg.Text('(Solo Pediatria)'),sg.CalendarButton('Fecha de Nacimiento', target=(1,2), auto_size_button=True, format='%Y/%m/%d'), 
+    [sg.Text('(Solo Pediatria)'),sg.CalendarButton('Fecha de Nacimiento', target=('-fn2-'), auto_size_button=True, format='%Y/%m/%d'), 
      sg.Input(size=(13,2), key='-fn2-'), sg.Radio('Masculino', "RADIO2",key='-masc2-'), sg.Radio('Femenino', "RADIO2",default=True, key='-fem2-')],
     [sg.Checkbox(' Insumo', key='-param4-'), sg.Combo(mcombo, size=(90,6), key='-insumo-'),sg.Button('Modificar Registro'), sg.Button('Borrar Registro')]
 ]
@@ -768,6 +797,7 @@ AreaCambios = [
 
 # Acomodo de elementos de ventana
 layout = [
+    [sg.Menu(menuprincipal)],
     [sg.Frame('Busqueda por paciente', Info_Paciente), sg.Frame('Herramientas', AreaHerramientas)],
     [sg.Frame('Consulta de registros', AreaRegistros)],
     [sg.Frame('Modificar registros', AreaCambios)]
@@ -832,8 +862,21 @@ while True:  # Mantenerla persistente
         
         else:
             sg.popup('¿CAW?','Selecciona una especialidad!\n')
+
+    #Exportar base de datos
+    elif event == 'Exportar Base de Datos':
+        if values['-BD-'] == 'BD Local':
+            sg.popup('¿CAW?','Solo es posible hacer respaldo de la BD Maria\n')
+
+        elif values['-BD-'] == 'BD Maria':
+            try:
+                exportar_bd()
+            except:
+                pass
         
-    
+        else:
+            sg.popup('¿CAW?','Selecciona una base de datos!\n')
+        
     #Modificar registros
     elif event == 'Modificar Registro':
         if values['-ID-'].isdigit() and values['-ID-'] != "":

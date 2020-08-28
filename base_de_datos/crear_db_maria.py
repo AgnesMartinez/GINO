@@ -33,7 +33,8 @@ catalogoinsumos = """CREATE TABLE IF NOT EXISTS catalogoinsumos(
     clave VARCHAR(255),
     nombre VARCHAR(255),
     descripcion TEXT,
-    PRIMARY KEY (ID))"""
+    PRIMARY KEY (ID)
+    )"""
 
 cursor.execute(catalogoinsumos)
 
@@ -41,40 +42,70 @@ ind_clave = """CREATE INDEX IF NOT EXISTS ind_clave ON catalogoinsumos (clave)""
 
 cursor.execute(ind_clave)
 
+#Crear tabla de pacientes para ginecologia
+pacientes_ginecologia = """CREATE TABLE IF NOT EXISTS pacientes_gine ( 
+    ID INTEGER AUTO_INCREMENT,
+    nombre VARCHAR(255),
+    CURP VARCHAR(255),
+    status VARCHAR(255),
+    PRIMARY KEY (ID)
+    )"""
+
+cursor.execute(pacientes_ginecologia)
+
+ind_pxgine = """CREATE INDEX IF NOT EXISTS ind_pxgine ON pacientes_gine (CURP)"""
+
+cursor.execute(ind_pxgine)
+
 #Crear tabla de registros para ginecologia
 
-ginecologia = """CREATE TABLE IF NOT EXISTS ginecologia (
+registros_ginecologia = """CREATE TABLE IF NOT EXISTS registros_gine (
     ID INTEGER AUTO_INCREMENT,
-    paciente_id VARCHAR(255) ,
     CURP VARCHAR (255) ,
     clave VARCHAR(255) ,
     fecha DATE ,
-    hora VARCHAR (255),
-    servicio VARCHAR (255),
-    PRIMARY KEY (ID))"""
+    hora VARCHAR(255) ,
+    servicio VARCHAR(255),
+    PRIMARY KEY (ID)
+    )"""
 
-cursor.execute(ginecologia)
+cursor.execute(registros_ginecologia)
 
-ind_gine = """CREATE INDEX IF NOT EXISTS ind_gine ON ginecologia (CURP)"""
+ind_gine = """CREATE INDEX IF NOT EXISTS ind_gine ON registros_gine (CURP)"""
 
 cursor.execute(ind_gine)
 
+#Crear tabla de pacientes para pediatria
+
+pacientes_pediatria = """CREATE TABLE IF NOT EXISTS pacientes_pedia ( 
+    ID INTEGER AUTO_INCREMENT,
+    nombre VARCHAR(255),
+    CURP VARCHAR(255),
+    status VARCHAR(255),
+    PRIMARY KEY (ID)
+    )"""
+
+cursor.execute(pacientes_pediatria)
+
+ind_pxpedia = """CREATE INDEX IF NOT EXISTS ind_pxpedia ON pacientes_pedia (CURP)"""
+
+cursor.execute(ind_pxpedia)
+
 #Crear tabla de registros para pediatria
 
-pediatria = """CREATE TABLE IF NOT EXISTS pediatria (
+registros_pediatria = """CREATE TABLE IF NOT EXISTS registros_pedia (
     ID INTEGER AUTO_INCREMENT,
-    paciente_id VARCHAR(255),
     CURP VARCHAR (255) ,
-    CUPI VARCHAR (255) ,
     clave VARCHAR(255) ,
-    fecha DATE,
-    hora VARCHAR (255),
+    fecha DATE ,
+    hora VARCHAR(255) ,
     servicio VARCHAR(255),
-    PRIMARY KEY (ID))"""
+    PRIMARY KEY (ID)
+    )"""
 
-cursor.execute(pediatria)
+cursor.execute(registros_pediatria)
 
-ind_pedia = """CREATE INDEX IF NOT EXISTS ind_pedia ON pediatria (paciente_id)"""
+ind_pedia = """CREATE INDEX IF NOT EXISTS ind_pedia ON registros_pedia (CURP)"""
 
 cursor.execute(ind_pedia)
 

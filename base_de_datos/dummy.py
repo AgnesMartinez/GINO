@@ -32,29 +32,7 @@ def maria_connect():
     except Exception as e:
         print(f"Error connecting to MariaDB Platform: {e}")
 
-
-#with conn:
-#    query = """SELECT * FROM pediatria"""
-#    transacciones = conn.execute(query)
-#    for item in transacciones:
-#        print(f'---------------\n{item}\n')
-
-
-#lista = []
-#i = 0
-#with open('./base_de_datos/catalogobkp.csv','r',encoding='utf-8',) as csv_file:
-#    csv_reader = csv.reader(csv_file, delimiter=',')
-#
-#    for row in csv_reader:
-#        lista.append([row[0].replace('.','-'),row[1].upper(),row[2].upper()])
-#
-#
-#with open('./base_de_datos/catalogo.csv','w', encoding='utf-8',newline="\n") as csv_file:
-#    csv_writer = csv.writer(csv_file, delimiter=',')
-#
-#    for item in lista:
-#        csv_writer.writerow(item)
-
+        
 '''
 with conn_local:
 
@@ -79,19 +57,7 @@ with open('./base_de_datos/dump.sql', 'w') as f:
 conn_local.close()
 '''
 
-fecha = '2020-08-21'
 
-query="""SELECT * FROM ginecologia WHERE fecha = %s ORDER BY ID DESC"""
-
-conn_maria = maria_connect()    
-            
-with conn_maria.cursor() as cursor:
-    cursor.execute(query,(fecha,))
-
-    lista = cursor.fetchall()
-
-    for item in lista:
-        print(f'------------------\n{item}')
 
 
 

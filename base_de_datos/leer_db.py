@@ -3,7 +3,7 @@ import sqlite3
 import pymysql.cursors
 
 
-
+'''
 #conectar a base de datos local
 DEFAULT_PATH = "./base_de_datos/db.sqlite3"
 
@@ -16,7 +16,7 @@ conn_local = db_connect()
 #iniciar cursor para querys
 cur = conn_local.cursor()
 
-query = """SELECT * FROM ginecologia"""
+query = """SELECT * FROM ginecologia WHERE fecha = '2020-08-21'"""
 
 cur.execute(query)
 
@@ -49,10 +49,10 @@ conn_maria = maria_connect()
 
 with conn_maria.cursor() as cursor:
 
-    query2 = """SELECT * FROM pediatria"""
+    #query1 = """GRANT ALL PRIVILEGES ON *.* TO 'censos_hosp'@'192.168.%' IDENTIFIED BY 'eheheh'"""
+
+    query2 = """SELECT user,password FROM mysql.user"""
     cursor.execute(query2)
     
     for item in cursor.fetchall():
         print(f'===========\n {item}')
-
-'''
